@@ -92,8 +92,16 @@
 #endif /* CONFIG_SMP */
 
 #define __my_cpu_type(var)	typeof(var) __percpu_seg_override
+<<<<<<< HEAD
 #define __my_cpu_ptr(ptr)	(__my_cpu_type(*(ptr))*)(__force uintptr_t)(ptr)
 #define __my_cpu_var(var)	(*__my_cpu_ptr(&(var)))
+||||||| parent of 7a4b16f8c68d (x86/percpu: Use __force to cast from __percpu address space)
+#define __my_cpu_ptr(ptr)	(__my_cpu_type(*ptr) *)(uintptr_t)(ptr)
+#define __my_cpu_var(var)	(*__my_cpu_ptr(&var))
+=======
+#define __my_cpu_ptr(ptr)	(__my_cpu_type(*ptr)*)(__force uintptr_t)(ptr)
+#define __my_cpu_var(var)	(*__my_cpu_ptr(&(var)))
+>>>>>>> 7a4b16f8c68d (x86/percpu: Use __force to cast from __percpu address space)
 #define __percpu_arg(x)		__percpu_prefix "%" #x
 #define __force_percpu_arg(x)	__force_percpu_prefix "%" #x
 
