@@ -94,6 +94,7 @@ struct sun6i_spi_cfg {
 	unsigned long		fifo_depth;
 	bool			has_clk_ctl;
 	u32			mode_bits;
+	u32			maxburst;
 };
 
 struct sun6i_spi {
@@ -220,7 +221,7 @@ static int sun6i_spi_prepare_dma(struct sun6i_spi *sspi,
 			.direction = DMA_DEV_TO_MEM,
 			.src_addr = sspi->dma_addr_rx,
 			.src_addr_width = DMA_SLAVE_BUSWIDTH_1_BYTE,
-			.src_maxburst = 8,
+			.src_maxburst = sspi->cfg->maxburst,
 		};
 
 		dmaengine_slave_config(host->dma_rx, &rxconf);
@@ -242,7 +243,7 @@ static int sun6i_spi_prepare_dma(struct sun6i_spi *sspi,
 			.direction = DMA_MEM_TO_DEV,
 			.dst_addr = sspi->dma_addr_tx,
 			.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES,
-			.dst_maxburst = 8,
+			.dst_maxburst = sspi->cfg->maxburst,
 		};
 
 		dmaengine_slave_config(host->dma_tx, &txconf);
@@ -779,16 +780,25 @@ static void sun6i_spi_remove(struct platform_device *pdev)
 static const struct sun6i_spi_cfg sun6i_a31_spi_cfg = {
 	.fifo_depth	= SUN6I_FIFO_DEPTH,
 	.has_clk_ctl	= true,
+	.maxburst	= 8,
 };
 
 static const struct sun6i_spi_cfg sun8i_h3_spi_cfg = {
 	.fifo_depth	= SUN8I_FIFO_DEPTH,
 	.has_clk_ctl	= true,
+	.maxburst	= 8,
 };
 
 static const struct sun6i_spi_cfg sun50i_r329_spi_cfg = {
 	.fifo_depth	= SUN8I_FIFO_DEPTH,
 	.mode_bits	= SPI_RX_DUAL | SPI_TX_DUAL | SPI_RX_QUAD | SPI_TX_QUAD,
+	.maxburst	= 8,
+};
+
+static const struct sun6i_spi_cfg suniv_f1c100s_spi_cfg = {
+	.fifo_depth     = SUN6I_FIFO_DEPTH,
+	.has_clk_ctl    = true,
+	.maxburst       = 4,
 };
 
 static const struct of_device_id sun6i_spi_match[] = {
@@ -797,6 +807,10 @@ static const struct of_device_id sun6i_spi_match[] = {
 	{
 		.compatible = "allwinner,sun50i-r329-spi",
 		.data = &sun50i_r329_spi_cfg
+	},
+	{ 
+		.compatible = "allwinner,suniv-f1c100s-spi",  
+		.data = &suniv_f1c100s_spi_cfg 
 	},
 	{}
 };
