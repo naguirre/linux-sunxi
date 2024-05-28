@@ -271,4 +271,5 @@ dtb-$(CONFIG_MACH_SUNIV) += \
 dtb-$(CONFIG_MACH_SUNIV) += \
 	suniv-f1c100s-licheepi-nano.dtb \
 	suniv-f1c200s-lctech-pi.dtb \
-	suniv-f1c200s-popstick-v1.1.dtb
+	suniv-f1c200s-popstick-v1.1.dtb \
+	suniv-f1c200s-mds-network-streamer-v1.0.dtb
