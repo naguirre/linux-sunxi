@@ -177,6 +177,7 @@ struct sun4i_spdif_quirks {
 	bool has_reset;
 	unsigned int val_fctl_ftx;
 	unsigned int mclk_multiplier;
+	unsigned int maxburst;
 };
 
 struct sun4i_spdif_dev {
@@ -544,6 +545,7 @@ static const struct sun4i_spdif_quirks sun4i_a10_spdif_quirks = {
 	.reg_dac_txdata	= SUN4I_SPDIF_TXFIFO,
 	.val_fctl_ftx   = SUN4I_SPDIF_FCTL_FTX,
 	.mclk_multiplier = 1,
+	.maxburst	= 8,
 };
 
 static const struct sun4i_spdif_quirks sun6i_a31_spdif_quirks = {
@@ -551,6 +553,7 @@ static const struct sun4i_spdif_quirks sun6i_a31_spdif_quirks = {
 	.val_fctl_ftx   = SUN4I_SPDIF_FCTL_FTX,
 	.has_reset	= true,
 	.mclk_multiplier = 1,
+	.maxburst	= 8,
 };
 
 static const struct sun4i_spdif_quirks sun8i_h3_spdif_quirks = {
@@ -558,6 +561,7 @@ static const struct sun4i_spdif_quirks sun8i_h3_spdif_quirks = {
 	.val_fctl_ftx   = SUN4I_SPDIF_FCTL_FTX,
 	.has_reset	= true,
 	.mclk_multiplier = 4,
+	.maxburst	= 8,
 };
 
 static const struct sun4i_spdif_quirks sun50i_h6_spdif_quirks = {
@@ -565,6 +569,15 @@ static const struct sun4i_spdif_quirks sun50i_h6_spdif_quirks = {
 	.val_fctl_ftx   = SUN50I_H6_SPDIF_FCTL_FTX,
 	.has_reset      = true,
 	.mclk_multiplier = 1,
+	.maxburst       = 8,
+};
+
+static const struct sun4i_spdif_quirks suniv_f1c100s_spdif_quirks = {
+	.reg_dac_txdata = SUN4I_SPDIF_TXFIFO,
+	.val_fctl_ftx   = SUN4I_SPDIF_FCTL_FTX,
+	.has_reset      = true,
+	.mclk_multiplier = 1,
+	.maxburst       = 4,
 };
 
 static const struct of_device_id sun4i_spdif_of_match[] = {
@@ -588,6 +601,10 @@ static const struct of_device_id sun4i_spdif_of_match[] = {
 		.compatible = "allwinner,sun50i-h616-spdif",
 		/* Essentially the same as the H6, but without RX */
 		.data = &sun50i_h6_spdif_quirks,
+	},
+	{
+		.compatible = "allwinner,suniv-f1c100s-spdif",
+		.data = &suniv_f1c100s_spdif_quirks,
 	},
 	{ /* sentinel */ }
 };
@@ -673,7 +690,7 @@ static int sun4i_spdif_probe(struct platform_device *pdev)
 	}
 
 	host->dma_params_tx.addr = res->start + quirks->reg_dac_txdata;
-	host->dma_params_tx.maxburst = 8;
+	host->dma_params_tx.maxburst = quirks->maxburst;
 	host->dma_params_tx.addr_width = DMA_SLAVE_BUSWIDTH_2_BYTES;
 
 	platform_set_drvdata(pdev, host);
