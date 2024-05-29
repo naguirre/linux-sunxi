@@ -176,7 +176,7 @@ struct sun4i_spdif_quirks {
 	unsigned int reg_dac_txdata;
 	bool has_reset;
 	unsigned int val_fctl_ftx;
-	unsigned int maxburst;
+	u32 maxburst;
 };
 
 struct sun4i_spdif_dev {
