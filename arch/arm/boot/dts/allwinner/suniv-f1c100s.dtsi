@@ -99,7 +99,7 @@
 			reg = <0x01c21400 0x400>;
 			interrupts = <5>;
 			clocks = <&ccu CLK_BUS_SPDIF>, <&ccu CLK_SPDIF>;
-			clock-names = "apb", "mod";
+			clock-names = "apb", "spdif";
 			resets = <&ccu RST_BUS_SPDIF>;
 			dmas = <&dma SUN4I_DMA_NORMAL 1>;
 			dma-names = "tx", "rx";
