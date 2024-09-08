@@ -79,7 +79,6 @@
 };
 
 &pio {
-
 	vcc-pa-supply = <&reg_vcc_3v3>;
 	vcc-pc-supply = <&reg_vcc_3v3>;
 	vcc-pd-supply = <&reg_vcc_3v3>;
@@ -201,6 +200,7 @@
 &usbphy {
 	usb0_vbus-supply = <&reg_usbvbus>;
 	status = "okay";
+	dr_mode = "peripheral";
 };
 
 &gpadc {

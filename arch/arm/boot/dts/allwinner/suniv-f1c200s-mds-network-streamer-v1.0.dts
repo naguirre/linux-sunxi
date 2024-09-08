@@ -1,0 +1,251 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright 2024 Nicolas Aguirre <aguirre.nicolas@gmail.com>
+ */
+
+/dts-v1/;
+#include "suniv-f1c100s.dtsi"
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
+
+/ {
+	model = "MDS Network Streamer v1.0";
+	compatible = "mds,network-streamer-v1.0",
+		     "allwinner,suniv-f1c200s";
+
+	aliases {
+		serial0 = &uart0;
+		i2c0 = &i2c0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led {
+			function = LED_FUNCTION_STATUS;
+			color = <LED_COLOR_ID_GREEN>;
+			gpios = <&pio 3 7 GPIO_ACTIVE_HIGH>; /* PD7 */
+			linux,default-trigger = "heartbeat";
+		};
+	};
+
+	reg_vcc3v3: regulator-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+
+	audio_mclk: audio-clock {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <25000000>;
+	};
+
+
+
+	// es9023: pcm5102a {
+	// 	#sound-dai-cells = <0>;
+	// 	compatible = "ti,pcm5102a";
+	// };
+
+	spdif_out: spdif-out {
+		#sound-dai-cells = <0>;
+		compatible = "linux,spdif-dit";
+	};
+
+	// sound-i2s {
+	// 	compatible = "simple-audio-card";
+	// 	simple-audio-card,name = "es9023";
+	// 	simple-audio-card,format = "i2s";
+	// 	simple-audio-card,mclk-fs = <256>;
+	// 	simple-audio-card,cpu {
+	// 		#sound-dai-cells = <0>;
+	// 		sound-dai = <&i2s0>;
+	// 	};
+
+	// 	simple-audio-card,codec {
+	// 		sound-dai = <&es9023>;
+	// 	};
+	// };
+	// sound-i2s {
+	// 	compatible = "simple-audio-card";
+    //             simple-audio-card,format = "i2s";
+    //             simple-audio-card,name = "seeed-2mic-voicecard"; 
+    //             status = "okay";
+    //             simple-audio-card,widgets =
+    //                     "Microphone", "Mic Jack",
+    //                     "Line", "Line In",
+    //                     "Line", "Line Out",
+    //                     "Speaker", "Speaker",
+    //                     "Headphone", "Headphone Jack";
+    //             simple-audio-card,routing =
+    //                     "Headphone Jack", "HP_L",
+    //                     "Headphone Jack", "HP_R",
+    //                     "Speaker", "SPK_LP",
+    //                     "Speaker", "SPK_LN",
+    //                     "LINPUT1", "Mic Jack",
+    //                     "LINPUT3", "Mic Jack",
+    //                     "RINPUT1", "Mic Jack",
+    //                     "RINPUT2", "Mic Jack";
+
+
+
+
+    //             simple-audio-card,cpu {
+    //                 sound-dai = <&i2s0>;
+    //             };
+    //             dailink0_slave: simple-audio-card,codec {
+    //                 sound-dai = <&wm8960>;
+	// 				clocks = <&audio_mclk>;
+	// 				clock-names = "mclk";
+
+    //             };
+	// };
+	sound-spdif {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "On-board SPDIF";
+
+		simple-audio-card,cpu {
+			sound-dai = <&spdif>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&spdif_out>;
+		};
+	};
+};
+
+
+
+&otg_sram {
+	status = "okay";
+};
+
+&spi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi0_pc_pins>;
+	status = "okay";
+	flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "winbond,w25q128", "spi-nand";
+		reg = <0>;
+		spi-max-frequency = <50000000>;
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "boot";
+				reg = <0 0x100000>;
+			};
+
+			partition@100000 {
+				label = "fota";
+				reg = <0x0100000 0x0f00000>;
+			};
+
+			partition@1000000 {
+				label = "rootfs";
+				reg = <0x1000000 0x3800000>;
+			};
+
+			partition@4800000 {
+				label = "data";
+				reg = <0x4800000 0x3800000>;
+			};
+		};
+	};
+
+ 	display@1 {
+		compatible = "gc9a01", "panel-mipi-dbi-spi";
+		reg = <1>;
+		spi-max-frequency = <40000000>;
+
+		reset-gpios = <&pio 3 5 GPIO_ACTIVE_HIGH>; //GPIO16 PIN36 PD5
+		dc-gpios = <&pio 3 6 GPIO_ACTIVE_HIGH>; //GIO17 11 PD6
+            	write-only;
+
+        //     backlight = <&backlight>;
+
+		width-mm = <38>;
+		height-mm = <38>;
+
+            	panel-timing {
+			hactive = <240>;
+			vactive = <240>;
+			hback-porch = <0>;
+			vback-porch = <0>;
+			clock-frequency = <0>;
+			hfront-porch = <0>;
+			hsync-len = <0>;
+			vfront-porch = <0>;
+			vsync-len = <0>;
+            	};
+	};
+};
+
+&spi1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi1_pe_pins>;
+	status = "okay";
+	
+ 	// spidev@0{
+    //     compatible = "rohm,dh2228fv";
+    //     reg = <0>;
+    //     spi-max-frequency = <40000000>;
+    // };
+};
+
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_pe_pins>;
+	status = "okay";
+};
+
+&usb_otg {
+	dr_mode = "peripheral";
+	status = "okay";
+};
+
+&usbphy {
+	//usb0_id_det-gpios = <&pio 5 0 GPIO_ACTIVE_HIGH>; /* PF0 */
+	status = "okay";
+};
+
+
+&spdif {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spdif_tx_pe_pin>;
+	status = "okay";
+};
+
+&i2s0 {
+	status = "disabled";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2s_pe_pins>;
+	status = "disabled";
+};
+
+&i2c0 {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pd_pins>;
+	
+	// wm8960: wm8960@1a {
+	// 	#sound-dai-cells = <0>;
+	// 	compatible = "wlf,wm8960";
+	// 	reg = <0x1a>;	
+	// 	// clocks = <&audio_mclk>;
+	// 	// clock-names = "mclk";	    
+	// 	// wlf,shared-lrclk;
+	// };
+
+};
