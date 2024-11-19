@@ -1359,7 +1359,7 @@ err_clk_disable:
 	return ret;
 }
 
-static int sun4i_dma_remove(struct platform_device *pdev)
+static void sun4i_dma_remove(struct platform_device *pdev)
 {
 	struct sun4i_dma_dev *priv = platform_get_drvdata(pdev);
 
@@ -1370,8 +1370,6 @@ static int sun4i_dma_remove(struct platform_device *pdev)
 	dma_async_device_unregister(&priv->slave);
 
 	clk_disable_unprepare(priv->clk);
-
-	return 0;
 }
 
 static struct sun4i_dma_config sun4i_a10_dma_cfg = {
