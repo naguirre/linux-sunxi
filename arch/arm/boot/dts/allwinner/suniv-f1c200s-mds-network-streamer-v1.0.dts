@@ -164,32 +164,6 @@
 		};
 	};
 
- 	display@1 {
-		compatible = "gc9a01", "panel-mipi-dbi-spi";
-		reg = <1>;
-		spi-max-frequency = <40000000>;
-
-		reset-gpios = <&pio 3 5 GPIO_ACTIVE_HIGH>; //GPIO16 PIN36 PD5
-		dc-gpios = <&pio 3 6 GPIO_ACTIVE_HIGH>; //GIO17 11 PD6
-            	write-only;
-
-        //     backlight = <&backlight>;
-
-		width-mm = <38>;
-		height-mm = <38>;
-
-            	panel-timing {
-			hactive = <240>;
-			vactive = <240>;
-			hback-porch = <0>;
-			vback-porch = <0>;
-			clock-frequency = <0>;
-			hfront-porch = <0>;
-			hsync-len = <0>;
-			vfront-porch = <0>;
-			vsync-len = <0>;
-            	};
-	};
 };
 
 &spi1 {
@@ -209,6 +183,13 @@
 	pinctrl-0 = <&uart0_pe_pins>;
 	status = "okay";
 };
+
+
+// &uart1 {
+// 	pinctrl-names = "default";
+// 	pinctrl-0 = <&uart1_pd_pins>;
+// 	status = "okay";
+// };
 
 &usb_otg {
 	dr_mode = "peripheral";
