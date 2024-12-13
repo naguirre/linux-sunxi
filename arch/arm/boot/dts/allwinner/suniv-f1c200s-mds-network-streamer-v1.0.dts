@@ -61,51 +61,31 @@
 
 	// sound-i2s {
 	// 	compatible = "simple-audio-card";
-	// 	simple-audio-card,name = "es9023";
+	// 	simple-audio-card,name = "tas5756";
 	// 	simple-audio-card,format = "i2s";
 	// 	simple-audio-card,mclk-fs = <256>;
+		
 	// 	simple-audio-card,cpu {
 	// 		#sound-dai-cells = <0>;
 	// 		sound-dai = <&i2s0>;
 	// 	};
 
 	// 	simple-audio-card,codec {
-	// 		sound-dai = <&es9023>;
+	// 		sound-dai = <&tas5756>;
 	// 	};
 	// };
+
 	// sound-i2s {
 	// 	compatible = "simple-audio-card";
-    //             simple-audio-card,format = "i2s";
-    //             simple-audio-card,name = "seeed-2mic-voicecard"; 
-    //             status = "okay";
-    //             simple-audio-card,widgets =
-    //                     "Microphone", "Mic Jack",
-    //                     "Line", "Line In",
-    //                     "Line", "Line Out",
-    //                     "Speaker", "Speaker",
-    //                     "Headphone", "Headphone Jack";
-    //             simple-audio-card,routing =
-    //                     "Headphone Jack", "HP_L",
-    //                     "Headphone Jack", "HP_R",
-    //                     "Speaker", "SPK_LP",
-    //                     "Speaker", "SPK_LN",
-    //                     "LINPUT1", "Mic Jack",
-    //                     "LINPUT3", "Mic Jack",
-    //                     "RINPUT1", "Mic Jack",
-    //                     "RINPUT2", "Mic Jack";
-
-
-
-
-    //             simple-audio-card,cpu {
-    //                 sound-dai = <&i2s0>;
-    //             };
-    //             dailink0_slave: simple-audio-card,codec {
-    //                 sound-dai = <&wm8960>;
-	// 				clocks = <&audio_mclk>;
-	// 				clock-names = "mclk";
-
-    //             };
+    //     simple-audio-card,name = "JustBoom AMP zero";
+	// 	simple-audio-card,format = "i2s";
+	// 	simple-audio-card,mclk-fs = <512>;
+	// 	simple-audio-card,cpu {
+	// 		sound-dai = <&i2s0>;
+	// 	};
+	// 	simple-audio-card,codec {
+	// 		sound-dai = <&tas5756>;
+	// 	};
 	// };
 	sound-spdif {
 		compatible = "simple-audio-card";
@@ -209,7 +189,6 @@
 };
 
 &i2s0 {
-	status = "disabled";
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2s_pe_pins>;
 	status = "disabled";
@@ -220,13 +199,17 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c0_pd_pins>;
 	
-	// wm8960: wm8960@1a {
-	// 	#sound-dai-cells = <0>;
-	// 	compatible = "wlf,wm8960";
-	// 	reg = <0x1a>;	
-	// 	// clocks = <&audio_mclk>;
-	// 	// clock-names = "mclk";	    
-	// 	// wlf,shared-lrclk;
-	// };
+	tas5756: tas5756@4d {
+		#sound-dai-cells = <0>;
+		compatible = "ti,tas5756";
+		reg = <0x4d>;
+		status = "okay";
+		//clocks =<&ccu CLK_I2S>;
+		//clocks = <&audio_mclk>;
+
+		// pll-in = <3>;
+		// pll-out = <6>;
+	};
+
 
 };

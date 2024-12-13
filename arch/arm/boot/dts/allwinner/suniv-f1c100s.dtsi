@@ -113,6 +113,9 @@
 			interrupts = <10>;
 			clocks = <&ccu CLK_BUS_SPI0>, <&ccu CLK_BUS_SPI0>;
 			clock-names = "ahb", "mod";
+			dmas = <&dma SUN4I_DMA_NORMAL 0x4>,
+				   <&dma SUN4I_DMA_NORMAL 0x4>;
+			dma-names = "rx", "tx";
 			resets = <&ccu RST_BUS_SPI0>;
 			status = "disabled";
 			num-cs = <1>;
@@ -127,6 +130,9 @@
 			interrupts = <11>;
 			clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_BUS_SPI1>;
 			clock-names = "ahb", "mod";
+			dmas = <&dma SUN4I_DMA_NORMAL 0x5>,
+				   <&dma SUN4I_DMA_NORMAL 0x5>;
+			dma-names = "rx", "tx";
 			resets = <&ccu RST_BUS_SPI1>;
 			status = "disabled";
 			num-cs = <1>;
@@ -233,6 +239,7 @@
 			i2c0_pd_pins: i2c0-pd-pins {
 				pins = "PD0", "PD12";
 				function = "i2c0";
+				bias-pull-up;
 			};
 
 			spdif_tx_pd_pin: spdif-tx-pd-pin {
