@@ -214,13 +214,15 @@ static int sun6i_spi_prepare_dma(struct sun6i_spi *sspi,
 	struct dma_async_tx_descriptor *rxdesc, *txdesc;
 	struct spi_controller *host = sspi->host;
 
+	dev_dbg(&sspi->host->dev, "Prepare DMA %p %p\n", tfr->tx_buf, tfr->rx_buf);
+
 	rxdesc = NULL;
 	if (tfr->rx_buf) {
 		struct dma_slave_config rxconf = {
 			.direction = DMA_DEV_TO_MEM,
 			.src_addr = sspi->dma_addr_rx,
 			.src_addr_width = DMA_SLAVE_BUSWIDTH_1_BYTE,
-			.src_maxburst = 8,
+			.src_maxburst = 4,
 		};
 
 		dmaengine_slave_config(host->dma_rx, &rxconf);
@@ -242,7 +244,7 @@ static int sun6i_spi_prepare_dma(struct sun6i_spi *sspi,
 			.direction = DMA_MEM_TO_DEV,
 			.dst_addr = sspi->dma_addr_tx,
 			.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES,
-			.dst_maxburst = 8,
+			.dst_maxburst = 4,
 		};
 
 		dmaengine_slave_config(host->dma_tx, &txconf);
