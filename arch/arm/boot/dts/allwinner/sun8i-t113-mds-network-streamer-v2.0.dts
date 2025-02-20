@@ -1,0 +1,78 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+// Copyright (C) 2022 Arm Ltd.
+
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/dts-v1/;
+
+#include "sun8i-t113s.dtsi"
+#include "sunxi-d1s-t113-mangopi-mq-r.dtsi"
+
+/ {
+	model = "MangoPi MQ-R-T113";
+	compatible = "widora,mangopi-mq-r-t113", "allwinner,sun8i-t113s";
+
+	aliases {
+		ethernet0 = &rtl8189ftv;
+		serial1 = &uart1;
+		serial5 = &uart5;
+	};
+
+	chosen {
+		stdout-path = "serial5:115200n8";
+		bootargs = "mem=128M cma=72M root=/dev/mmcblk0p2 init=/sbin/init rootwait console=tty0 console=ttyS5,115200";
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		status_led {
+			linux,default-trigger = "heartbeat";
+			label = "blue:status";
+			gpios = <&pio 3 22 GPIO_ACTIVE_HIGH>;
+		};
+	};
+};
+
+&cpu0 {
+	cpu-supply = <&reg_vcc_core>;
+};
+
+&cpu1 {
+	cpu-supply = <&reg_vcc_core>;
+};
+
+&mmc1 {
+	rtl8189ftv: wifi@1 {
+		reg = <1>;
+		interrupt-parent = <&pio>;
+		interrupts = <6 10 IRQ_TYPE_LEVEL_LOW>; /* PG10 = WL_WAKE_AP */
+		interrupt-names = "host-wake";
+	};
+};
+
+&uart1 {
+        uart-has-rtscts;
+        pinctrl-0 = <&uart1_pg6_pins>, <&uart1_pg8_rts_cts_pins>;
+        pinctrl-names = "default";
+        status = "okay";
+
+        /* XR829 bluetooth is connected here */
+};
+
+&uart5 {
+	pinctrl-0 = <&uart5_pb4_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+
+&pio {
+
+	uart5_pb4_pins: uart5-pb4-pins {
+	    pins = "PB4", "PB5";
+	    function = "uart5";
+	};
+
+
+};
