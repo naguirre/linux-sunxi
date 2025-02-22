@@ -175,6 +175,12 @@
 			};
 
 			/omit-if-no-ref/
+			spdif_tx_pin: spdif-tx-pin {
+				pins = "PE7";
+				function = "spdif";
+			};
+
+			/omit-if-no-ref/
 			uart1_pg6_pins: uart1-pg6-pins {
 				pins = "PG6", "PG7";
 				function = "uart1";
@@ -284,6 +290,19 @@
 			dma-names = "rx", "tx";
 			status = "disabled";
 			#sound-dai-cells = <0>;
+		};
+
+		spdif: spdif@2036000 {
+			#sound-dai-cells = <0>;
+			compatible = "allwinner,sun8i-h3-spdif";
+			reg = <0x02036000 0x400>;
+			interrupts =<SOC_PERIPHERAL_IRQ(23) IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_SPDIF>, <&ccu CLK_SPDIF_TX>;
+			clock-names = "apb", "spdif";
+			resets = <&ccu RST_BUS_SPDIF>;
+			dmas = <&dma 2>;
+			dma-names = "tx";
+			status = "disabled";
 		};
 
 		timer: timer@2050000 {
