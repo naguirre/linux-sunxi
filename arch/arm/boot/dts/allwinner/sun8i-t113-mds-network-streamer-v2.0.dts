@@ -60,6 +60,36 @@
 			sound-dai = <&spdif_out>;
 		};
 	};
+
+	// backlight: backlight {
+	// 	compatible = "pwm-backlight";
+	// 	power-supply = <&reg_vcc>;
+	// 	pwms = <&pwm 7 50000 0>;
+	// };
+	panel: panel {
+		compatible = "bananapi,s070wv20-ct16";
+		// power-supply = <&reg_vcc3v3>;
+		// enable-gpios = <&axp_gpio 0 GPIO_ACTIVE_HIGH>; /* AXP GPIO0 */
+		// backlight = <&backlight>;
+
+		port {
+			panel_input: endpoint {
+				remote-endpoint = <&tcon0_out_lcd>;
+			};
+		};
+	};
+	// panel@0 {
+	// 	compatible = "sitronix,st7701";
+	// 	reg = <0>;
+	// 	// backlight = <&backlight>;
+	// 	//reset-gpios = <&pio 6 13 GPIO_ACTIVE_LOW>; /* PG13 */
+
+	// 	port {
+	// 		panel_in_tcon_lcd0: endpoint {
+	// 			remote-endpoint = <&tcon_lcd0_out_panel>;
+	// 		};
+	// 	};
+	// };
 };
 
 &cpu0 {
@@ -120,3 +150,32 @@
 	pinctrl-0 = <&spdif_tx_pin>;
 	status = "okay";
 };
+
+&de {
+	status = "okay";
+};
+
+// &pwm {
+// 	pinctrl-0 = <&pwm7_pd22_pin>;
+// 	pinctrl-names = "default";
+// 	status = "okay";
+// };
+
+&tcon_lcd0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&lcd_rgb666_pins>;
+	status = "okay";
+};
+
+&tcon_lcd0_out {
+	tcon0_out_lcd: endpoint@0 {
+		reg = <0>;
+		remote-endpoint = <&panel_input>;
+	};
+};
+
+// &tcon_lcd0_out {
+// 	tcon_lcd0_out_panel: endpoint {
+// 		remote-endpoint = <&panel_in_tcon_lcd0>;
+// 	};
+// };
