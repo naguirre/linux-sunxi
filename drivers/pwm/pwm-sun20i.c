@@ -5,13 +5,20 @@
  * Copyright (c) 2023 Aleksandr Shubin <privatesub2@gmail.com>
  */
 
-#include <linux/err.h>
-#include <linux/io.h>
-#include <linux/module.h>
-#include <linux/of_device.h>
-#include <linux/pwm.h>
-#include <linux/clk.h>
-#include <linux/reset.h>
+ #include <linux/bitops.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/err.h>
+ #include <linux/io.h>
+ #include <linux/jiffies.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
+ #include <linux/pwm.h>
+ #include <linux/reset.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+ #include <linux/time.h>
 
 #define PWM_CLK_CFG_REG(chan)		(0x20 + (((chan) >> 1) * 0x4))
 #define PWM_CLK_SRC			7
@@ -41,6 +48,10 @@
 #define GET_VALUE(reg_val, name) \
 		 (((reg_val) & ~name##_MASK) >> (name))
 
+struct sun20i_pwm_data {
+	unsigned int npwm;
+};
+
 struct sun20i_pwm_chip {
 	struct pwm_chip chip;
 	struct clk *clk_bus, *clk_hosc;
@@ -48,11 +59,12 @@ struct sun20i_pwm_chip {
 	void __iomem *base;
 	/* Mutex to protect pwm apply state */
 	struct mutex mutex;
+	const struct sun20i_pwm_data *data;
 };
 
 static inline struct sun20i_pwm_chip *to_sun20i_pwm_chip(struct pwm_chip *chip)
 {
-	return container_of(chip, struct sun20i_pwm_chip, chip);
+	return pwmchip_get_drvdata(chip);
 }
 
 static inline u32 sun20i_pwm_readl(struct sun20i_pwm_chip *chip,
@@ -154,7 +166,7 @@ static int sun20i_pwm_apply(struct pwm_chip *chip, struct pwm_device *pwm,
 			clk_div = val;
 			for (prescaler = 0; clk_div > 65535; prescaler++) {
 				if (prescaler >= 256) {
-					dev_err(sun20i_chip->chip.dev, "Period is too long\n");
+					dev_err(pwmchip_parent(chip), "Period is too long\n");
 					ret = -EINVAL;
 					goto unlock_mutex;
 				}
@@ -173,7 +185,7 @@ static int sun20i_pwm_apply(struct pwm_chip *chip, struct pwm_device *pwm,
 				val = state->period * bus_rate;
 				do_div(val, NSEC_PER_SEC);
 				if (val <= 1) {
-					dev_err(sun20i_chip->chip.dev, "Period is too small\n");
+					dev_err(pwmchip_parent(chip), "Period is too small\n");
 					ret = -EINVAL;
 					goto unlock_mutex;
 				}
@@ -191,7 +203,7 @@ static int sun20i_pwm_apply(struct pwm_chip *chip, struct pwm_device *pwm,
 					prescaler = 0;
 					div_m++;
 					if (div_m >= 9) {
-						dev_err(sun20i_chip->chip.dev, "Period is too long\n");
+						dev_err(pwmchip_parent(chip), "Period is too long\n");
 						ret = -EINVAL;
 						goto unlock_mutex;
 					}
@@ -253,26 +265,48 @@ unlock_mutex:
 }
 
 static const struct pwm_ops sun20i_pwm_ops = {
-	.get_state = sun20i_pwm_get_state,
 	.apply = sun20i_pwm_apply,
-	.owner = THIS_MODULE,
+	.get_state = sun20i_pwm_get_state,
+};
+
+static const struct sun20i_pwm_data sun20i_d1_t113_pwm_data = {
+	.npwm = 8,
+};
+
+static const struct sun20i_pwm_data sun20i_r329_pwm_data = {
+	.npwm = 2,
 };
 
 static const struct of_device_id sun20i_pwm_dt_ids[] = {
-	{ .compatible = "allwinner,sun20i-d1-pwm" },
-	{ },
+	{
+		.compatible = "allwinner,sun20i-d1-pwm",
+		.data = &sun20i_d1_t113_pwm_data,
+	}, {
+		.compatible = "allwinner,sun20i-r329-pwm",
+		.data = &sun20i_r329_pwm_data,
+	}, {
+		/* sentinel */
+	},
 };
 MODULE_DEVICE_TABLE(of, sun20i_pwm_dt_ids);
 
 static int sun20i_pwm_probe(struct platform_device *pdev)
 {
+	struct pwm_chip *chip;
+	const struct sun20i_pwm_data *data;
 	struct sun20i_pwm_chip *sun20i_chip;
 	int ret;
 
-	sun20i_chip = devm_kzalloc(&pdev->dev, sizeof(*sun20i_chip), GFP_KERNEL);
-	if (!sun20i_chip)
-		return -ENOMEM;
+	data = of_device_get_match_data(&pdev->dev);
+	if (!data)
+		return -ENODEV;
 
+	chip = devm_pwmchip_alloc(&pdev->dev, data->npwm, sizeof(*sun20i_chip));
+	if (IS_ERR(chip))
+		return PTR_ERR(chip);
+
+	sun20i_chip = to_sun20i_pwm_chip(chip);
+	sun20i_chip->data = data;
 	sun20i_chip->base = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(sun20i_chip->base))
 		return PTR_ERR(sun20i_chip->base);
@@ -308,26 +342,17 @@ static int sun20i_pwm_probe(struct platform_device *pdev)
 		goto err_bus;
 	}
 
-	ret = of_property_read_u32(pdev->dev.of_node,
-				   "allwinner,pwm-channels",
-				   &sun20i_chip->chip.npwm);
-	if (ret) {
-		dev_err(&pdev->dev, "Can't get pwm-channels\n");
-		goto err_pwm_add;
-	}
-
-	sun20i_chip->chip.dev = &pdev->dev;
-	sun20i_chip->chip.ops = &sun20i_pwm_ops;
+	chip->ops = &sun20i_pwm_ops;
 
 	mutex_init(&sun20i_chip->mutex);
 
-	ret = pwmchip_add(&sun20i_chip->chip);
+	ret = pwmchip_add(chip);
 	if (ret < 0) {
 		dev_err(&pdev->dev, "Failed to add PWM chip: %d\n", ret);
 		goto err_pwm_add;
 	}
 
-	platform_set_drvdata(pdev, sun20i_chip);
+	platform_set_drvdata(pdev, chip);
 
 	return 0;
 
@@ -341,7 +366,6 @@ err_bus:
 static void sun20i_pwm_remove(struct platform_device *pdev)
 {
 	struct sun20i_pwm_chip *sun20i_chip = platform_get_drvdata(pdev);
-	int ret;
 
 	pwmchip_remove(&sun20i_chip->chip);
 
@@ -355,10 +379,11 @@ static struct platform_driver sun20i_pwm_driver = {
 		.of_match_table = sun20i_pwm_dt_ids,
 	},
 	.probe = sun20i_pwm_probe,
-	.remove_new = sun20i_pwm_remove,
+	.remove = sun20i_pwm_remove,
 };
 module_platform_driver(sun20i_pwm_driver);
 
+MODULE_ALIAS("platform:sun20i-pwm");
 MODULE_AUTHOR("Aleksandr Shubin <privatesub2@gmail.com>");
 MODULE_DESCRIPTION("Allwinner sun20i PWM driver");
 MODULE_LICENSE("GPL");
