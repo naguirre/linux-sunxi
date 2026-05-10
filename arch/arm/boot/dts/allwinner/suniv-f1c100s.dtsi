@@ -71,15 +71,6 @@
 			};
 		};
 
-		dma: dma-controller@1c02000 {
-			compatible = "allwinner,suniv-f1c100s-dma";
-			reg = <0x01c02000 0x1000>;
-			interrupts = <18>;
-			clocks = <&ccu CLK_BUS_DMA>;
-			resets = <&ccu RST_BUS_DMA>;
-			#dma-cells = <2>;
-		};
-
 		i2s0: i2s@1c22000 {
 			#sound-dai-cells = <0>;
 			compatible = "allwinner,sun6i-a31-i2s";
